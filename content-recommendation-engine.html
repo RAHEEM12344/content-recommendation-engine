@@ -1,0 +1,971 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Personalized Content Recommendation Engine V2</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-light: #818cf8;
+            --primary-dark: #4f46e5;
+            --secondary: #0ea5e9;
+            --background: #f8fafc;
+            --surface: #ffffff;
+            --text: #334155;
+            --text-light: #64748b;
+            --success: #10b981;
+            --info: #06b6d4;
+            --warning: #f59e0b;
+            --error: #ef4444;
+            --border-radius: 12px;
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            --transition: all 0.2s ease;
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            background-color: var(--background);
+            color: var(--text);
+            line-height: 1.6;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 24px;
+            width: 100%;
+        }
+        
+        header {
+            background: linear-gradient(to right, var(--primary-dark), var(--primary));
+            color: white;
+            padding: 24px 0;
+            box-shadow: var(--shadow);
+        }
+        
+        .app-title {
+            font-size: 2.2rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+            text-align: center;
+            background: linear-gradient(to right, #ffffff, #f0f0ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .subheading {
+            text-align: center;
+            font-weight: 400;
+            opacity: 0.9;
+            font-size: 1.1rem;
+        }
+        
+        .main-content {
+            flex: 1;
+            padding: 32px 0;
+        }
+        
+        .user-preferences {
+            background-color: var(--surface);
+            border-radius: var(--border-radius);
+            padding: 28px;
+            margin-bottom: 32px;
+            box-shadow: var(--shadow);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .user-preferences::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 5px;
+            background: linear-gradient(to right, var(--primary), var(--secondary));
+        }
+        
+        .preference-section {
+            margin-bottom: 28px;
+        }
+        
+        .section-title {
+            margin-bottom: 24px;
+            position: relative;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: var(--primary-dark);
+            font-weight: 600;
+            font-size: 1.3rem;
+        }
+        
+        .section-title i {
+            font-size: 1.3rem;
+            color: var(--primary);
+        }
+        
+        .preference-section h3 {
+            font-size: 1.1rem;
+            color: var(--text);
+            margin-bottom: 16px;
+            font-weight: 600;
+        }
+        
+        .tag-container, .category-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .tag, .category-btn {
+            padding: 8px 16px;
+            border-radius: 32px;
+            cursor: pointer;
+            transition: var(--transition);
+            user-select: none;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .tag {
+            background-color: #f1f5f9;
+            color: var(--text);
+            border: 1px solid #e2e8f0;
+        }
+        
+        .tag:hover {
+            background-color: #e2e8f0;
+        }
+        
+        .tag.selected {
+            background-color: var(--primary-light);
+            color: white;
+            border-color: var(--primary-light);
+            box-shadow: 0 2px 4px rgba(99, 102, 241, 0.3);
+        }
+        
+        .category-btn {
+            background-color: #f1f5f9;
+            color: var(--text);
+            border: 1px solid #e2e8f0;
+            font-weight: 500;
+        }
+        
+        .category-btn:hover {
+            background-color: #e2e8f0;
+        }
+        
+        .category-btn.selected {
+            background-color: var(--secondary);
+            color: white;
+            border-color: var(--secondary);
+            box-shadow: 0 2px 4px rgba(14, 165, 233, 0.3);
+        }
+        
+        .slider-container {
+            padding: 0 10px;
+            margin-bottom: 24px;
+        }
+        
+        .slider-container label {
+            display: block;
+            margin-bottom: 12px;
+            font-weight: 500;
+            color: var(--text);
+        }
+        
+        .slider-wrapper {
+            padding: 0 6px;
+        }
+        
+        .slider {
+            -webkit-appearance: none;
+            width: 100%;
+            height: 6px;
+            border-radius: 5px;
+            background: #e2e8f0;
+            outline: none;
+            margin-bottom: 10px;
+        }
+        
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: var(--primary);
+            cursor: pointer;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            transition: var(--transition);
+        }
+        
+        .slider::-webkit-slider-thumb:hover {
+            background: var(--primary-dark);
+            transform: scale(1.1);
+        }
+        
+        .slider::-moz-range-thumb {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: var(--primary);
+            cursor: pointer;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            transition: var(--transition);
+            border: none;
+        }
+        
+        .slider::-moz-range-thumb:hover {
+            background: var(--primary-dark);
+            transform: scale(1.1);
+        }
+        
+        .slider-values {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.85rem;
+            color: var(--text-light);
+        }
+        
+        .recommendations {
+            background-color: var(--surface);
+            border-radius: var(--border-radius);
+            padding: 28px;
+            box-shadow: var(--shadow);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .recommendations::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 5px;
+            background: linear-gradient(to right, var(--secondary), var(--primary));
+        }
+        
+        .recommendations h2 {
+            color: var(--primary-dark);
+            margin-bottom: 24px;
+            font-size: 1.5rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .recommendations h2 i {
+            color: var(--primary);
+        }
+        
+        .content-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 24px;
+        }
+        
+        .content-card {
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            box-shadow: var(--shadow);
+            transition: var(--transition);
+            background-color: var(--surface);
+            border: 1px solid #e2e8f0;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .content-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-lg);
+        }
+        
+        .card-img {
+            height: 160px;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 3rem;
+            font-weight: 700;
+            background-size: cover;
+            background-position: center;
+            background-image: linear-gradient(135deg, rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.3));
+        }
+        
+        .card-body {
+            padding: 20px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .card-title {
+            margin-top: 0;
+            margin-bottom: 12px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text);
+        }
+        
+        .card-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: var(--text-light);
+            font-size: 0.85rem;
+            margin-bottom: 14px;
+        }
+        
+        .popularity {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .popularity i {
+            color: var(--warning);
+        }
+        
+        .card-category {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 4px 10px;
+            border-radius: 16px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            background-color: #f1f5f9;
+            color: var(--text);
+        }
+        
+        .card-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: 14px;
+            margin-top: auto;
+            padding-top: 14px;
+        }
+        
+        .card-tag {
+            background-color: #f8fafc;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            color: var(--text-light);
+            border: 1px solid #e2e8f0;
+        }
+        
+        .match-score {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 16px;
+            font-weight: 500;
+            font-size: 0.8rem;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .match-score i {
+            color: var(--success);
+        }
+        
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            font-size: 1rem;
+        }
+        
+        .btn-primary {
+            background-color: var(--primary);
+            color: white;
+            box-shadow: 0 4px 6px rgba(99, 102, 241, 0.25);
+        }
+        
+        .btn-primary:hover {
+            background-color: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 8px rgba(99, 102, 241, 0.3);
+        }
+        
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+        
+        .actions {
+            display: flex;
+            justify-content: center;
+            margin-top: 28px;
+        }
+        
+        .footer {
+            text-align: center;
+            padding: 24px;
+            margin-top: 32px;
+            color: var(--text-light);
+            font-size: 0.9rem;
+            border-top: 1px solid #e2e8f0;
+            background-color: var(--surface);
+        }
+        
+        @media (max-width: 768px) {
+            .content-grid {
+                grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+            }
+            
+            .app-title {
+                font-size: 1.8rem;
+            }
+            
+            .subheading {
+                font-size: 1rem;
+            }
+        }
+        
+        @media (max-width: 576px) {
+            .content-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .tag, .category-btn {
+                padding: 6px 12px;
+                font-size: 0.85rem;
+            }
+            
+            .user-preferences, .recommendations {
+                padding: 20px;
+            }
+        }
+
+        .tag-search:focus {
+            outline: none;
+            border-color: var(--primary-light);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+
+        .tags-controls .btn {
+            white-space: nowrap;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1 class="app-title">Content Recommendation Engine</h1>
+            <p class="subheading">Discover personalized content tailored to your interests</p>
+        </div>
+    </header>
+    
+    <div class="container main-content">
+        <section class="user-preferences">
+            <h2 class="section-title"><i class="fas fa-sliders"></i>Your Preferences</h2>
+            
+            <div class="preference-section">
+                <h3>Categories</h3>
+                <div class="category-container" id="categories">
+                    <!-- Categories will be added dynamically -->
+                </div>
+            </div>
+            
+            <div class="preference-section">
+                <h3>Tags</h3>
+                <div class="tag-container" id="tags">
+                    <!-- Tags will be added dynamically -->
+                </div>
+            </div>
+            
+            <div class="preference-section">
+                <h3>Content Parameters</h3>
+                
+                <div class="slider-container">
+                    <label for="popularity-weight">Popularity Importance</label>
+                    <div class="slider-wrapper">
+                        <input type="range" id="popularity-weight" class="slider" min="0" max="100" value="50">
+                    </div>
+                    <div class="slider-values">
+                        <span>Discover New</span>
+                        <span>Popular</span>
+                    </div>
+                </div>
+                
+                <div class="slider-container">
+                    <label for="similarity-weight">Similarity to Previous Choices</label>
+                    <div class="slider-wrapper">
+                        <input type="range" id="similarity-weight" class="slider" min="0" max="100" value="70">
+                    </div>
+                    <div class="slider-values">
+                        <span>Diverse</span>
+                        <span>Similar</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="actions">
+                <button id="update-recommendations" class="btn btn-primary">
+                    <i class="fas fa-sync-alt"></i>
+                    Update Recommendations
+                </button>
+            </div>
+        </section>
+        
+        <section class="recommendations">
+            <h2><i class="fas fa-lightbulb"></i>Recommended Content</h2>
+            <div class="content-grid" id="content-grid">
+                <!-- Content cards will be added dynamically -->
+            </div>
+        </section>
+    </div>
+    
+    <footer class="footer">
+        <p>© 2025 Alexander Huseby | Content Recommendation Engine | Personalized Content Discovery</p>
+    </footer>
+
+    <script>
+        // Content database
+        const contentDatabase = [
+            { id: 1, title: "Understanding Machine Learning", category: "Technology", tags: ["AI", "Data Science", "Programming"], popularity: 95, color: "#6366f1" },
+            { id: 2, title: "The Art of Cooking", category: "Cooking", tags: ["Food", "Recipes", "Culinary"], popularity: 88, color: "#10b981" },
+            { id: 3, title: "Modern Architecture Trends", category: "Design", tags: ["Buildings", "Innovation", "Art"], popularity: 76, color: "#f59e0b" },
+            { id: 4, title: "Financial Planning 101", category: "Finance", tags: ["Money", "Investment", "Planning"], popularity: 82, color: "#8b5cf6" },
+            { id: 5, title: "Health and Fitness Guide", category: "Health", tags: ["Workout", "Nutrition", "Wellness"], popularity: 90, color: "#06b6d4" },
+            { id: 6, title: "Introduction to Python", category: "Technology", tags: ["Programming", "Coding", "Software"], popularity: 92, color: "#6366f1" },
+            { id: 7, title: "Digital Marketing Essentials", category: "Business", tags: ["Marketing", "Social Media", "Strategy"], popularity: 85, color: "#ec4899" },
+            { id: 8, title: "World History Chronicles", category: "Education", tags: ["History", "Learning", "Culture"], popularity: 78, color: "#ef4444" },
+            { id: 9, title: "Photography Masterclass", category: "Art", tags: ["Photos", "Creative", "Composition"], popularity: 89, color: "#0ea5e9" },
+            { id: 10, title: "Home Gardening Guide", category: "Lifestyle", tags: ["Plants", "Nature", "DIY"], popularity: 79, color: "#10b981" },
+            { id: 11, title: "Advanced JavaScript Techniques", category: "Technology", tags: ["Programming", "Web", "JavaScript"], popularity: 91, color: "#6366f1" },
+            { id: 12, title: "Travel Europe on a Budget", category: "Travel", tags: ["Europe", "Budget", "Adventure"], popularity: 87, color: "#f59e0b" },
+            { id: 13, title: "Psychology of Decision Making", category: "Psychology", tags: ["Mind", "Behavior", "Science"], popularity: 83, color: "#8b5cf6" },
+            { id: 14, title: "Sustainable Living", category: "Lifestyle", tags: ["Eco", "Green", "Environment"], popularity: 81, color: "#10b981" },
+            { id: 15, title: "Data Visualization Guide", category: "Technology", tags: ["Data", "Graphics", "Analysis"], popularity: 86, color: "#6366f1" },
+            { id: 16, title: "Starting a Small Business", category: "Business", tags: ["Entrepreneurship", "Startup", "Strategy"], popularity: 84, color: "#ec4899" },
+            { id: 17, title: "Healthy Meal Prep Ideas", category: "Cooking", tags: ["Health", "Food", "Nutrition"], popularity: 88, color: "#10b981" },
+            { id: 18, title: "Cybersecurity Basics", category: "Technology", tags: ["Security", "Internet", "Protection"], popularity: 90, color: "#6366f1" },
+            { id: 19, title: "Investing in Stocks", category: "Finance", tags: ["Stocks", "Investment", "Money"], popularity: 85, color: "#8b5cf6" },
+            { id: 20, title: "Fiction Writing Workshop", category: "Art", tags: ["Writing", "Creative", "Stories"], popularity: 77, color: "#0ea5e9" },
+            { id: 21, title: "Web Development Fundamentals", category: "Technology", tags: ["HTML", "CSS", "Web Design"], popularity: 89, color: "#6366f1" },
+            { id: 22, title: "Modern React Patterns", category: "Technology", tags: ["React", "JavaScript", "Frontend"], popularity: 94, color: "#6366f1" },
+            { id: 23, title: "Italian Cuisine Masterclass", category: "Cooking", tags: ["Italian", "Pasta", "Mediterranean"], popularity: 86, color: "#10b981" },
+            { id: 24, title: "Blockchain Technology Explained", category: "Technology", tags: ["Blockchain", "Cryptocurrency", "Web3"], popularity: 88, color: "#6366f1" },
+            { id: 25, title: "Mindfulness Meditation Guide", category: "Health", tags: ["Meditation", "Mental Health", "Wellness"], popularity: 83, color: "#06b6d4" },
+            { id: 26, title: "Interior Design Principles", category: "Design", tags: ["Home", "Decoration", "Aesthetics"], popularity: 79, color: "#f59e0b" },
+            { id: 27, title: "Digital Photography Basics", category: "Art", tags: ["Photos", "Camera", "Composition"], popularity: 82, color: "#0ea5e9" },
+            { id: 28, title: "Effective Public Speaking", category: "Education", tags: ["Communication", "Presentation", "Skills"], popularity: 81, color: "#ef4444" },
+            { id: 29, title: "Mobile App Development", category: "Technology", tags: ["Apps", "Mobile", "Development"], popularity: 90, color: "#6366f1" },
+            { id: 30, title: "Cloud Computing Services", category: "Technology", tags: ["Cloud", "AWS", "Infrastructure"], popularity: 87, color: "#6366f1" },
+            { id: 31, title: "Personal Finance Management", category: "Finance", tags: ["Budget", "Savings", "Financial Planning"], popularity: 85, color: "#8b5cf6" },
+            { id: 32, title: "Yoga for Beginners", category: "Health", tags: ["Yoga", "Fitness", "Relaxation"], popularity: 84, color: "#06b6d4" },
+            { id: 33, title: "Content Marketing Strategy", category: "Business", tags: ["Marketing", "Content", "Strategy"], popularity: 83, color: "#ec4899" },
+            { id: 34, title: "Asian Street Food Journey", category: "Cooking", tags: ["Asian", "Street Food", "Cultural"], popularity: 78, color: "#10b981" },
+            { id: 35, title: "Landscape Photography Tips", category: "Art", tags: ["Photography", "Nature", "Landscape"], popularity: 77, color: "#0ea5e9" },
+            { id: 36, title: "Introduction to Artificial Intelligence", category: "Technology", tags: ["AI", "Machine Learning", "Future Tech"], popularity: 93, color: "#6366f1" },
+            { id: 37, title: "Social Media Marketing", category: "Business", tags: ["Social Media", "Marketing", "Digital"], popularity: 87, color: "#ec4899" },
+            { id: 38, title: "Creative Writing Workshop", category: "Art", tags: ["Writing", "Creative", "Expression"], popularity: 76, color: "#0ea5e9" },
+            { id: 39, title: "UI/UX Design Principles", category: "Design", tags: ["UI", "UX", "User Experience"], popularity: 89, color: "#f59e0b" },
+            { id: 40, title: "Renewable Energy Technologies", category: "Technology", tags: ["Renewable", "Green Tech", "Sustainability"], popularity: 80, color: "#6366f1" },
+            { id: 41, title: "DevOps Best Practices", category: "Technology", tags: ["DevOps", "CI/CD", "Automation"], popularity: 86, color: "#6366f1" },
+            { id: 42, title: "Cryptocurrency Investment Guide", category: "Finance", tags: ["Crypto", "Investment", "Bitcoin"], popularity: 84, color: "#8b5cf6" },
+            { id: 43, title: "Plant-Based Cooking", category: "Cooking", tags: ["Vegan", "Plant-based", "Healthy"], popularity: 82, color: "#10b981" },
+            { id: 44, title: "Home Workout Routines", category: "Health", tags: ["Fitness", "Exercise", "Home Workout"], popularity: 85, color: "#06b6d4" },
+            { id: 45, title: "Email Marketing Fundamentals", category: "Business", tags: ["Email", "Marketing", "Campaigns"], popularity: 79, color: "#ec4899" },
+            { id: 46, title: "Data Science with Python", category: "Technology", tags: ["Data Science", "Python", "Analytics"], popularity: 92, color: "#6366f1" },
+            { id: 47, title: "Modern Graphic Design", category: "Design", tags: ["Graphic Design", "Visual", "Creative"], popularity: 83, color: "#f59e0b" },
+            { id: 48, title: "French Pastry Techniques", category: "Cooking", tags: ["Pastry", "French", "Baking"], popularity: 81, color: "#10b981" },
+            { id: 49, title: "Digital Illustration Methods", category: "Art", tags: ["Illustration", "Digital", "Drawing"], popularity: 78, color: "#0ea5e9" },
+            { id: 50, title: "SEO Strategy Guide", category: "Business", tags: ["SEO", "Marketing", "Online Presence"], popularity: 86, color: "#ec4899" },
+            { id: 51, title: "Introduction to Quantum Computing", category: "Technology", tags: ["Quantum", "Computing", "Advanced"], popularity: 89, color: "#6366f1" },
+            { id: 52, title: "Cognitive Behavioral Therapy", category: "Psychology", tags: ["CBT", "Therapy", "Mental Health"], popularity: 80, color: "#8b5cf6" },
+            { id: 53, title: "Ancient World History", category: "Education", tags: ["History", "Ancient", "Civilization"], popularity: 75, color: "#ef4444" },
+            { id: 54, title: "Product Management Essentials", category: "Business", tags: ["Product", "Management", "Strategy"], popularity: 84, color: "#ec4899" },
+            { id: 55, title: "Watercolor Painting Techniques", category: "Art", tags: ["Painting", "Watercolor", "Artistic"], popularity: 77, color: "#0ea5e9" },
+            { id: 56, title: "Cybersecurity for Organizations", category: "Technology", tags: ["Security", "Cyber", "Protection"], popularity: 88, color: "#6366f1" },
+            { id: 57, title: "Real Estate Investment", category: "Finance", tags: ["Real Estate", "Investment", "Property"], popularity: 83, color: "#8b5cf6" },
+            { id: 58, title: "Asian Fusion Cuisine", category: "Cooking", tags: ["Asian", "Fusion", "Innovative"], popularity: 80, color: "#10b981" },
+            { id: 59, title: "Strength Training Fundamentals", category: "Health", tags: ["Strength", "Fitness", "Muscle"], popularity: 86, color: "#06b6d4" },
+            { id: 60, title: "Leadership Development", category: "Business", tags: ["Leadership", "Management", "Skills"], popularity: 85, color: "#ec4899" },
+            { id: 61, title: "Game Development with Unity", category: "Technology", tags: ["Games", "Unity", "Development"], popularity: 89, color: "#6366f1" },
+            { id: 62, title: "Sustainable Architecture", category: "Design", tags: ["Architecture", "Sustainable", "Green Building"], popularity: 82, color: "#f59e0b" },
+            { id: 63, title: "Mediterranean Diet Cookbook", category: "Cooking", tags: ["Mediterranean", "Healthy", "Diet"], popularity: 84, color: "#10b981" },
+            { id: 64, title: "Portrait Photography Mastery", category: "Art", tags: ["Portrait", "Photography", "People"], popularity: 79, color: "#0ea5e9" },
+            { id: 65, title: "Search Engine Marketing", category: "Business", tags: ["SEM", "Google Ads", "Paid Marketing"], popularity: 83, color: "#ec4899" },
+            { id: 66, title: "Machine Learning Applications", category: "Technology", tags: ["ML", "AI", "Applications"], popularity: 91, color: "#6366f1" },
+            { id: 67, title: "Positive Psychology Practices", category: "Psychology", tags: ["Positive", "Wellbeing", "Happiness"], popularity: 81, color: "#8b5cf6" },
+            { id: 68, title: "Classical Literature Analysis", category: "Education", tags: ["Literature", "Classics", "Analysis"], popularity: 74, color: "#ef4444" },
+            { id: 69, title: "Growth Hacking Techniques", category: "Business", tags: ["Growth", "Marketing", "Startups"], popularity: 87, color: "#ec4899" },
+            { id: 70, title: "Abstract Oil Painting", category: "Art", tags: ["Painting", "Abstract", "Oil"], popularity: 75, color: "#0ea5e9" },
+            { id: 71, title: "Internet of Things (IoT)", category: "Technology", tags: ["IoT", "Connected Devices", "Smart Home"], popularity: 85, color: "#6366f1" },
+            { id: 72, title: "Retirement Planning Guide", category: "Finance", tags: ["Retirement", "Planning", "Future"], popularity: 82, color: "#8b5cf6" },
+            { id: 73, title: "Baking Science Explained", category: "Cooking", tags: ["Baking", "Science", "Techniques"], popularity: 79, color: "#10b981" },
+            { id: 74, title: "HIIT Workout Programs", category: "Health", tags: ["HIIT", "Cardio", "Intense"], popularity: 87, color: "#06b6d4" },
+            { id: 75, title: "Business Negotiation Skills", category: "Business", tags: ["Negotiation", "Communication", "Skills"], popularity: 84, color: "#ec4899" },
+            { id: 76, title: "3D Modeling and Animation", category: "Design", tags: ["3D", "Animation", "Modeling"], popularity: 86, color: "#f59e0b" },
+            { id: 77, title: "Zero Waste Lifestyle", category: "Lifestyle", tags: ["Zero Waste", "Sustainable", "Eco-friendly"], popularity: 80, color: "#10b981" },
+            { id: 78, title: "Digital Marketing Analytics", category: "Business", tags: ["Analytics", "Digital", "Data-Driven"], popularity: 85, color: "#ec4899" },
+            { id: 79, title: "Deep Learning Neural Networks", category: "Technology", tags: ["Deep Learning", "Neural Networks", "AI"], popularity: 90, color: "#6366f1" },
+            { id: 80, title: "Child Development Psychology", category: "Psychology", tags: ["Child", "Development", "Psychology"], popularity: 82, color: "#8b5cf6" },
+            { id: 81, title: "World Geography Tour", category: "Education", tags: ["Geography", "World", "Places"], popularity: 76, color: "#ef4444" },
+            { id: 82, title: "E-commerce Business Guide", category: "Business", tags: ["E-commerce", "Online Business", "Retail"], popularity: 87, color: "#ec4899" },
+            { id: 83, title: "Textile Arts and Crafts", category: "Art", tags: ["Textile", "Crafts", "Handmade"], popularity: 76, color: "#0ea5e9" },
+            { id: 84, title: "Natural Language Processing", category: "Technology", tags: ["NLP", "AI", "Language Tech"], popularity: 88, color: "#6366f1" },
+            { id: 85, title: "Stock Market Analysis", category: "Finance", tags: ["Stocks", "Analysis", "Trading"], popularity: 85, color: "#8b5cf6" },
+            { id: 86, title: "Fermentation and Pickling", category: "Cooking", tags: ["Fermentation", "Pickling", "Preservation"], popularity: 78, color: "#10b981" },
+            { id: 87, title: "Pilates Complete Workout", category: "Health", tags: ["Pilates", "Core Strength", "Flexibility"], popularity: 83, color: "#06b6d4" },
+            { id: 88, title: "Project Management Methods", category: "Business", tags: ["Project Management", "Agile", "Scrum"], popularity: 86, color: "#ec4899" },
+            { id: 89, title: "Ethical Hacking Techniques", category: "Technology", tags: ["Ethical Hacking", "Security", "Penetration Testing"], popularity: 89, color: "#6366f1" },
+            { id: 90, title: "Industrial Design Innovations", category: "Design", tags: ["Industrial", "Product Design", "Innovation"], popularity: 81, color: "#f59e0b" },
+            { id: 91, title: "Mexican Cuisine Exploration", category: "Cooking", tags: ["Mexican", "Spicy", "Traditional"], popularity: 80, color: "#10b981" },
+            { id: 92, title: "Film Making Fundamentals", category: "Art", tags: ["Film", "Cinema", "Production"], popularity: 81, color: "#0ea5e9" },
+            { id: 93, title: "Content Strategy for Brands", category: "Business", tags: ["Content", "Branding", "Strategy"], popularity: 84, color: "#ec4899" },
+            { id: 94, title: "Robotics Engineering", category: "Technology", tags: ["Robotics", "Engineering", "Automation"], popularity: 87, color: "#6366f1" },
+            { id: 95, title: "Behavioral Economics", category: "Psychology", tags: ["Economics", "Behavior", "Decision Making"], popularity: 80, color: "#8b5cf6" },
+            { id: 96, title: "Modern Literature Analysis", category: "Education", tags: ["Literature", "Modern", "Critical Thinking"], popularity: 75, color: "#ef4444" },
+            { id: 97, title: "Social Entrepreneurship", category: "Business", tags: ["Social Impact", "Entrepreneurship", "Change"], popularity: 83, color: "#ec4899" },
+            { id: 98, title: "Ceramic Art Techniques", category: "Art", tags: ["Ceramics", "Pottery", "Sculpting"], popularity: 77, color: "#0ea5e9" },
+            { id: 99, title: "Augmented Reality Development", category: "Technology", tags: ["AR", "Development", "Immersive"], popularity: 88, color: "#6366f1" },
+            { id: 100, title: "Investment Portfolio Strategies", category: "Finance", tags: ["Portfolio", "Investment", "Diversification"], popularity: 84, color: "#8b5cf6" },
+            { id: 101, title: "Sourdough Bread Making", category: "Cooking", tags: ["Sourdough", "Bread", "Artisanal"], popularity: 79, color: "#10b981" },
+            { id: 102, title: "Functional Fitness Training", category: "Health", tags: ["Functional", "Fitness", "Training"], popularity: 85, color: "#06b6d4" },
+            { id: 103, title: "Brand Identity Design", category: "Design", tags: ["Branding", "Identity", "Logo Design"], popularity: 85, color: "#f59e0b" },
+            { id: 104, title: "Remote Work Productivity", category: "Lifestyle", tags: ["Remote Work", "Productivity", "Work-Life Balance"], popularity: 86, color: "#10b981" },
+            { id: 105, title: "Conversational AI Chatbots", category: "Technology", tags: ["Chatbots", "AI", "Conversation"], popularity: 86, color: "#6366f1" },
+            { id: 106, title: "Sustainable Fashion Guide", category: "Lifestyle", tags: ["Fashion", "Sustainable", "Ethical"], popularity: 81, color: "#10b981" },
+            { id: 107, title: "Visual Storytelling", category: "Art", tags: ["Visual", "Storytelling", "Narrative"], popularity: 80, color: "#0ea5e9" },
+            { id: 108, title: "Cryptocurrency Exchange Guide", category: "Finance", tags: ["Crypto", "Exchange", "Trading"], popularity: 83, color: "#8b5cf6" },
+            { id: 109, title: "Southeast Asian Cuisine", category: "Cooking", tags: ["Asian", "Southeast", "Spicy"], popularity: 78, color: "#10b981" },
+            { id: 110, title: "Microservices Architecture", category: "Technology", tags: ["Microservices", "Architecture", "Backend"], popularity: 88, color: "#6366f1" },
+            { id: 111, title: "Stress Management Techniques", category: "Health", tags: ["Stress", "Management", "Mental Health"], popularity: 84, color: "#06b6d4" },
+            { id: 112, title: "Advanced Excel for Business", category: "Business", tags: ["Excel", "Data", "Analysis"], popularity: 85, color: "#ec4899" },
+            { id: 113, title: "Urban Sketching Guide", category: "Art", tags: ["Sketching", "Urban", "Drawing"], popularity: 76, color: "#0ea5e9" },
+            { id: 114, title: "Mobile UX Design", category: "Design", tags: ["UX", "Mobile", "Design Thinking"], popularity: 87, color: "#f59e0b" },
+            { id: 115, title: "Personality Psychology", category: "Psychology", tags: ["Personality", "Traits", "Psychology"], popularity: 81, color: "#8b5cf6" },
+            { id: 116, title: "Molecular Gastronomy", category: "Cooking", tags: ["Molecular", "Science", "Innovative"], popularity: 80, color: "#10b981" },
+            { id: 117, title: "Sustainable Travel Guide", category: "Travel", tags: ["Sustainable", "Eco-Travel", "Responsible"], popularity: 82, color: "#f59e0b" },
+            { id: 118, title: "Container Orchestration", category: "Technology", tags: ["Kubernetes", "Docker", "Containers"], popularity: 89, color: "#6366f1" },
+            { id: 119, title: "Relationship Psychology", category: "Psychology", tags: ["Relationship", "Couples", "Communication"], popularity: 83, color: "#8b5cf6" },
+            { id: 120, title: "Digital Minimalism", category: "Lifestyle", tags: ["Minimalism", "Digital", "Focus"], popularity: 79, color: "#10b981" }
+        ];
+
+        // Get all unique categories and tags
+        const allCategories = [...new Set(contentDatabase.map(item => item.category))];
+        const allTags = [...new Set(contentDatabase.flatMap(item => item.tags))];
+
+        // User preferences state
+        const userPreferences = {
+            selectedCategories: [],
+            selectedTags: [],
+            popularityWeight: 50,
+            similarityWeight: 70,
+            viewedContent: []
+        };
+
+        // Map of icons for categories
+        const categoryIcons = {
+            'Technology': 'fas fa-laptop-code',
+            'Cooking': 'fas fa-utensils',
+            'Design': 'fas fa-drafting-compass',
+            'Finance': 'fas fa-chart-line',
+            'Health': 'fas fa-heartbeat',
+            'Business': 'fas fa-briefcase',
+            'Education': 'fas fa-graduation-cap',
+            'Art': 'fas fa-palette',
+            'Lifestyle': 'fas fa-leaf',
+            'Travel': 'fas fa-plane',
+            'Psychology': 'fas fa-brain'
+        };
+
+        // Initialize the UI
+        document.addEventListener('DOMContentLoaded', () => {
+            initializeCategories();
+            initializeTags();
+            updateRecommendations();
+            
+            // Set up event listeners
+            document.getElementById('update-recommendations').addEventListener('click', updateRecommendations);
+            document.getElementById('popularity-weight').addEventListener('input', (e) => {
+                userPreferences.popularityWeight = parseInt(e.target.value);
+            });
+            document.getElementById('similarity-weight').addEventListener('input', (e) => {
+                userPreferences.similarityWeight = parseInt(e.target.value);
+            });
+        });
+
+        // Initialize category buttons
+        function initializeCategories() {
+            const categoriesContainer = document.getElementById('categories');
+            categoriesContainer.innerHTML = '';
+            
+            allCategories.forEach(category => {
+                const categoryBtn = document.createElement('div');
+                categoryBtn.className = 'category-btn';
+                
+                // Get the icon for this category or use a default
+                const iconClass = categoryIcons[category] || 'fas fa-tag';
+                
+                categoryBtn.innerHTML = `<i class="${iconClass}"></i>${category}`;
+                categoryBtn.addEventListener('click', () => toggleCategory(category, categoryBtn));
+                categoriesContainer.appendChild(categoryBtn);
+            });
+        }
+
+        // Initialize tag buttons
+        function initializeTags() {
+            const tagsContainer = document.getElementById('tags');
+            tagsContainer.innerHTML = '';
+            
+            // Add search field and button container
+            const controlsDiv = document.createElement('div');
+            controlsDiv.className = 'tags-controls';
+            controlsDiv.style.cssText = 'margin-bottom: 16px; display: flex; gap: 10px;';
+            
+            const searchInput = document.createElement('input');
+            searchInput.type = 'text';
+            searchInput.placeholder = 'Search tags...';
+            searchInput.className = 'tag-search';
+            searchInput.style.cssText = `
+                padding: 8px 12px;
+                border: 1px solid #e2e8f0;
+                border-radius: 8px;
+                flex: 1;
+                font-size: 0.9rem;
+                color: var(--text);
+            `;
+            
+            const showMoreBtn = document.createElement('button');
+            showMoreBtn.className = 'btn btn-primary';
+            showMoreBtn.style.padding = '8px 16px';
+            showMoreBtn.innerHTML = '<i class="fas fa-plus"></i> Show More';
+            
+            controlsDiv.appendChild(searchInput);
+            controlsDiv.appendChild(showMoreBtn);
+            tagsContainer.appendChild(controlsDiv);
+            
+            // Create container for tags
+            const tagsWrapper = document.createElement('div');
+            tagsWrapper.className = 'tags-wrapper';
+            tagsWrapper.style.cssText = 'display: flex; flex-wrap: wrap; gap: 10px;';
+            tagsContainer.appendChild(tagsWrapper);
+            
+            let visibleTags = 10;
+            let filteredTags = [...allTags];
+            
+            function renderTags() {
+                tagsWrapper.innerHTML = '';
+                const tagsToShow = filteredTags.slice(0, visibleTags);
+                
+                tagsToShow.forEach(tag => {
+                    const tagElement = document.createElement('div');
+                    tagElement.className = 'tag';
+                    tagElement.innerHTML = `<i class="fas fa-hashtag"></i>${tag}`;
+                    tagElement.addEventListener('click', () => toggleTag(tag, tagElement));
+                    
+                    // Check if tag is selected and add selected class
+                    if (userPreferences.selectedTags.includes(tag)) {
+                        tagElement.classList.add('selected');
+                    }
+                    
+                    tagsWrapper.appendChild(tagElement);
+                });
+                
+                // Show/hide "Show More" button based on remaining tags
+                showMoreBtn.style.display = filteredTags.length > visibleTags ? 'flex' : 'none';
+            }
+            
+            // Show More button click handler
+            showMoreBtn.addEventListener('click', () => {
+                visibleTags += 10;
+                renderTags();
+            });
+            
+            // Search input handler
+            searchInput.addEventListener('input', (e) => {
+                const searchTerm = e.target.value.toLowerCase();
+                filteredTags = allTags.filter(tag => 
+                    tag.toLowerCase().includes(searchTerm)
+                );
+                visibleTags = 10;
+                renderTags();
+            });
+            
+            // Initial render
+            renderTags();
+        }
+
+        // Toggle category selection
+        function toggleCategory(category, element) {
+            if (userPreferences.selectedCategories.includes(category)) {
+                userPreferences.selectedCategories = userPreferences.selectedCategories.filter(c => c !== category);
+                element.classList.remove('selected');
+            } else {
+                userPreferences.selectedCategories.push(category);
+                element.classList.add('selected');
+            }
+        }
+
+        // Toggle tag selection
+        function toggleTag(tag, element) {
+            if (userPreferences.selectedTags.includes(tag)) {
+                userPreferences.selectedTags = userPreferences.selectedTags.filter(t => t !== tag);
+                element.classList.remove('selected');
+            } else {
+                userPreferences.selectedTags.push(tag);
+                element.classList.add('selected');
+            }
+        }
+
+        // Calculate recommendation score for an item
+        function calculateRecommendationScore(item) {
+            // Category match
+            const categoryScore = userPreferences.selectedCategories.length === 0 || 
+                                 userPreferences.selectedCategories.includes(item.category) ? 1 : 0;
+            
+            // Tag match (percentage of user's selected tags that match the item's tags)
+            let tagScore = 0;
+            if (userPreferences.selectedTags.length > 0) {
+                const matchingTags = item.tags.filter(tag => userPreferences.selectedTags.includes(tag));
+                tagScore = matchingTags.length / userPreferences.selectedTags.length;
+            } else {
+                tagScore = 0.5; // Neutral score if no tags selected
+            }
+            
+            // Popularity score (normalized to 0-1)
+            const popularityScore = item.popularity / 100;
+            
+            // Similarity to previously viewed content
+            let similarityScore = 0.5; // Default if no content viewed
+            if (userPreferences.viewedContent.length > 0) {
+                // Calculate similarity based on category and tag overlap with viewed content
+                const similarities = userPreferences.viewedContent.map(viewedId => {
+                    const viewedItem = contentDatabase.find(c => c.id === viewedId);
+                    if (!viewedItem) return 0;
+                    
+                    // Category match
+                    const catMatch = item.category === viewedItem.category ? 1 : 0;
+                    
+                    // Tag overlap
+                    const commonTags = item.tags.filter(tag => viewedItem.tags.includes(tag)).length;
+                    const tagOverlap = (commonTags / Math.max(1, item.tags.length + viewedItem.tags.length - commonTags));
+                    
+                    return (catMatch + tagOverlap) / 2;
+                });
+                
+                similarityScore = similarities.reduce((sum, val) => sum + val, 0) / similarities.length;
+            }
+            
+            // Calculate final score based on weights
+            const popularityWeight = userPreferences.popularityWeight / 100;
+            const similarityWeight = userPreferences.similarityWeight / 100;
+            
+            // Base score gives 40% weight to category/tag match and distributes remaining 60% according to sliders
+            const baseMatchScore = (categoryScore * 0.6) + (tagScore * 0.4);
+            
+            // Final weighted score
+            const finalScore = (baseMatchScore * 0.4) + 
+                             (popularityScore * popularityWeight * 0.3) + 
+                             (similarityScore * similarityWeight * 0.3);
+            
+            return finalScore * 100; // Return as percentage
+        }
+
+        // Update recommendations based on current preferences
+        function updateRecommendations() {
+            const contentGrid = document.getElementById('content-grid');
+            contentGrid.innerHTML = '';
+            
+            // Calculate scores for all items
+            const scoredContent = contentDatabase.map(item => ({
+                ...item,
+                score: calculateRecommendationScore(item)
+            }));
+            
+            // Sort by score and get top 8
+            const recommendations = scoredContent
+                .sort((a, b) => b.score - a.score)
+                .slice(0, 8);
+            
+            // Create content cards
+            recommendations.forEach(item => {
+                const card = createContentCard(item);
+                contentGrid.appendChild(card);
+            });
+        }
+
+        // Create a content card element
+        function createContentCard(item) {
+            const card = document.createElement('div');
+            card.className = 'content-card';
+            
+            // Get the icon for this category
+            const iconClass = categoryIcons[item.category] || 'fas fa-tag';
+            
+            card.innerHTML = `
+                <div class="card-img" style="background-color: ${item.color}">
+                    ${item.title.charAt(0)}
+                    <div class="match-score"><i class="fas fa-check-circle"></i>${Math.round(item.score)}% Match</div>
+                </div>
+                <div class="card-body">
+                    <h3 class="card-title">${item.title}</h3>
+                    <div class="card-meta">
+                        <div class="card-category"><i class="${iconClass}"></i>${item.category}</div>
+                        <div class="popularity"><i class="fas fa-fire"></i>${item.popularity}%</div>
+                    </div>
+                    <div class="card-tags">
+                        ${item.tags.map(tag => `<span class="card-tag">#${tag}</span>`).join('')}
+                    </div>
+                </div>
+            `;
+            
+            // Add click event to track viewed content
+            card.addEventListener('click', () => {
+                if (!userPreferences.viewedContent.includes(item.id)) {
+                    userPreferences.viewedContent.push(item.id);
+                }
+                // Show an indicator that the item was clicked
+                card.style.transition = 'all 0.3s ease';
+                card.style.boxShadow = '0 0 0 3px var(--success)';
+                setTimeout(() => {
+                    card.style.boxShadow = '';
+                }, 1000);
+            });
+            
+            return card;
+        }
+    </script>
+</body>
+</html>
